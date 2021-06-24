@@ -1,16 +1,18 @@
 #!/usr/bin/python
 
 import imaplib
-import pprint
 import sys
+import os
 import configparser
+from email.parser import HeaderParser
 
 CONFIGS = configparser.ConfigParser(interpolation=None)
 PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
+CONFIGS.read(PATH_CONFIG_FILE)
 
-imap_host = CONFIGS['IMAP_HOST']
-imap_user = CONFIGS['IMAP_USER']
-imap_pass = CONFIGS['IMAP_PASSWORD']
+imap_host = CONFIGS['IMAP']['HOST']
+imap_user = CONFIGS['IMAP']['USER']
+imap_pass = CONFIGS['IMAP']['PASSWORD']
 
 imap = imaplib.IMAP4_SSL(imap_host)
 imap.login(imap_user, imap_pass)
@@ -18,12 +20,21 @@ imap.login(imap_user, imap_pass)
 imap.select('Inbox')
 
 typ, msgnums = imap.search(None, 'ALL')
-# print(imap.search(None, 'ALL'))
-# print(msgnums)
-print(type(msgnums))
+
+HEADER_INDEX=1
+parser = HeaderParser()
 for num in msgnums[0].split():
     mtyp, msg = imap.fetch(num, '(BODY[HEADER])')
-    print(msg, end="\n\n")
+    # print(type(msg[0][HEADER_INDEX]))
+    # msg = msg[0][1].decode('utf-8')
+    header_data=msg[0][HEADER_INDEX]
+    msg = parser.parsestr(header_data.decode('utf-8'))
+    # print(msg.keys())
+    print(f"From {msg['From']}")
+    print(f"To {msg['To']}")
+    print(f"Subject {msg['Subject']}")
+    print(f"Content-Type {msg['Content-Type']}")
+    break
     
 
 # for num in msgnums
