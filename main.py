@@ -10,6 +10,7 @@ import imaplib
 import sys
 import os
 import configparser
+import base64
 import email
 from email.parser import HeaderParser
 
@@ -43,7 +44,8 @@ for num in msgnums[0].split():
 
     for part in msg.walk():
         if part.get_content_type() == "text/plain":
-            print(part.get_payload())
+            # TODO: get encoding from part.get_charset()
+            print(str(base64.b64decode(part.get_payload()), 'utf-8'))
     break
     
 
