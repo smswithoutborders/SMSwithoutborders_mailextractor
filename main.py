@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+''' resources
+- https://docs.python.org/3/library/imaplib.html
+- https://datatracker.ietf.org/doc/html/rfc3501#section-6.4.5
+- https://docs.python.org/3/library/email.compat32-message.html#email.message.Message
+'''
+
 import imaplib
 import sys
 import os
