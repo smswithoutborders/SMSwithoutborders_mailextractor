@@ -32,21 +32,33 @@ typ, msgnums = imap.search(None, 'ALL')
 CONTENT_INDEX=1
 STANDARDS='(RFC822)'
 parser = HeaderParser()
+
+msg_counter=0
+max_counter = int(sys.argv[1])
 for num in msgnums[0].split():
     mtyp, msg = imap.fetch(num, STANDARDS)
-    header_data=msg[0][CONTENT_INDEX]
-    msg = email.message_from_bytes(header_data)
+    data=msg[0][CONTENT_INDEX]
+    msg = email.message_from_bytes(data)
+    # print(msg.keys())
 
+    print(f"ID: {msg['Message-ID']}")
     print(f"From: {msg['From']}")
     print(f"To: {msg['To']}")
     print(f"Subject: {msg['Subject']}")
+    print()
+    '''
     # print(f"Content-Type {msg['Content-Type']}")
 
     for part in msg.walk():
         if part.get_content_type() == "text/plain":
             # TODO: get encoding from part.get_charset()
-            print(str(base64.b64decode(part.get_payload()), 'utf-8'))
-    break
+            # print(str(base64.b64decode(part.get_payload()), 'utf-8'))
+            print(part.get_payload())
+    '''
+
+    if msg_counter == max_counter:
+        break
+    msg_counter +=1
     
 
 # for num in msgnums
