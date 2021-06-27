@@ -44,8 +44,7 @@ for num in msgnums[0].split():
     print(f"ID: {msg['Message-ID']}")
     print(f"From: {msg['From']}")
     print(f"To: {msg['To']}")
-    print(f"Subject: {msg['Subject']}")
-    print()
+    print(f"Subject: {msg['Subject']}", end="\n\n")
     '''
     # print(f"Content-Type {msg['Content-Type']}")
 
