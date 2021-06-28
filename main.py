@@ -12,7 +12,7 @@ import os
 import configparser
 import base64
 import email
-import tqdm
+from tqdm import tqdm
 from email.parser import HeaderParser
 from datastore import Datastore
 
@@ -41,7 +41,9 @@ def get_mails():
     '''
     ['Return-Path', 'Delivered-To', 'Received', 'Received', 'Received', 'Received', 'Received', 'DKIM-Signature', 'X-Google-DKIM-Signature', 'X-Gm-Message-State', 'X-Google-Smtp-Source', 'MIME-Version', 'X-Received', 'Date', 'Reply-To', 'Message-ID', 'Subject', 'From', 'To', 'Cc', 'Content-Type', 'X-NCJF-Result', 'X-NCJF-Version', 'Authentication-Results']
     '''
-    for num in tqdm(range(len(msgnums[0].split())), "extracting..."):
+    msgs = msgnums[0].split()
+    for i in tqdm(range(len(msgs)), "extracting..."):
+        num = msgs[i]
         mtyp, msg = imap.fetch(num, STANDARDS)
         data=msg[0][CONTENT_INDEX]
         msg = email.message_from_bytes(data)
@@ -72,6 +74,7 @@ def get_mails():
         if msg['Message-ID'] == '<0000000000008af50105c51941cc@google.com>':
             print(data)
         '''
+        '''
         print(f"ID: {msg['Message-ID']}")
         print(f"From: {msg['From']}")
         print(f"Reply-To: {msg['Reply-To']}")
@@ -83,6 +86,7 @@ def get_mails():
         print(f"Encodings: {encodings}")
         print(f"Content-Transfer-Encoding: {content_transfer_encoding}")
         print(f"Body - snippet: {Body[:40]}", end="\n\n")
+        '''
 
         datastore = Datastore()
         try:
