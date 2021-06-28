@@ -13,6 +13,7 @@ import configparser
 import base64
 import email
 from email.parser import HeaderParser
+from datastore import Datastore
 
 CONFIGS = configparser.ConfigParser(interpolation=None)
 PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
@@ -39,7 +40,7 @@ for num in msgnums[0].split():
     mtyp, msg = imap.fetch(num, STANDARDS)
     data=msg[0][CONTENT_INDEX]
     msg = email.message_from_bytes(data)
-    # print(msg.keys())
+    print(msg.keys())
 
     print(f"ID: {msg['Message-ID']}")
     print(f"From: {msg['From']}")
