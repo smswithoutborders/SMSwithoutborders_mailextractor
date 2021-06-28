@@ -1,2 +1,5 @@
-mysql-connector==2.2.9
+mysql-connector-python==8.0.25
+mysql-connector-python-rf==2.2.2
+protobuf==3.17.3
 PyMySQL==1.0.2
+six==1.16.0

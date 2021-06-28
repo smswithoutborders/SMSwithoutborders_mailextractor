@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 ''' resources
 - https://docs.python.org/3/library/imaplib.html
