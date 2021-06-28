@@ -7,6 +7,11 @@ import configparser
 from datetime import date
 
 CONFIGS = configparser.ConfigParser(interpolation=None)
+PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
+if os.path.exists( PATH_CONFIG_FILE ):
+    CONFIGS.read(PATH_CONFIG_FILE)
+else:
+    raise Exception(f"config file not found: {PATH_CONFIG_FILE}")
 DATABASE = CONFIGS['MYSQL']['DATABASE']
 TABLE_SESSIONS = "emails"
 mydb = None
@@ -15,12 +20,12 @@ mysqlcursor = None
 # A little bit too extensive
 columns = {
         "id": "VARCHAR(255) NOT NULL PRIMARY KEY",
-        "from": "VARCHAR(512) NOT NULL",
-        "to": "VARCHAR(255) NOT NULL",
+        "_from": "VARCHAR(512) NOT NULL",
+        "_to": "VARCHAR(255) NOT NULL",
         "subject": "VARCHAR(1028) NOT NULL",
         "encoding": "VARCHAR(64) NOT NULL",
         "content_transfer_encoding": "VARCHAR(64) NULL",
-        "body": "TEXT"
+        "body": "TEXT", 
         "date": "VARCHAR(64) NOT NULL",
         "meta_date": "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
         "meta_mdate": "TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
@@ -106,11 +111,6 @@ def insert_default_route( router_url):
 
 # CHECK DATABASE
 def sr_database_checks():
-    PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'configs', 'config.mysql.ini')
-    if os.path.exists( PATH_CONFIG_FILE ):
-        CONFIGS.read(PATH_CONFIG_FILE)
-    else:
-        raise Exception(f"config file not found: {PATH_CONFIG_FILE}")
     global mysqlcursor, mydb
 
     HOST = CONFIGS["MYSQL"]["HOST"]
@@ -132,7 +132,7 @@ def sr_database_checks():
         print("\t>> Database not found")
         # Do something about it
         try:
-            create_database( mysqlcursor, DATABASE)
+            create_database( mysqlcursor, CONFIGS['MYSQL']['DATABASE'])
             print("\t[+] Database created!")
         except Exception as error:
             print( error )
