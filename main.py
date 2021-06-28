@@ -52,6 +52,7 @@ def get_mails():
         Subject = msg['Subject']
         reply_to = msg['Reply-To']
         cc = msg['Cc']
+        date=msg['Date']
         encoding=None
         encodings=[]
         content_transfer_encoding=None
@@ -76,6 +77,7 @@ def get_mails():
         print(f"To: {msg['To']}")
         print(f"Cc: {msg['Cc']}")
         print(f"Subject: {msg['Subject']}") 
+        print(f"Date: {msg['Date']}") 
         print(f"Encoding: {encoding}")
         print(f"Encodings: {encodings}")
         print(f"Content-Transfer-Encoding: {content_transfer_encoding}")
@@ -93,7 +95,7 @@ def get_mails():
                     date = date, \
                     encoding = encoding, \
                     content_transfer_encoding = content_transfer_encoding, \
-                    body = body)
+                    body = Body)
         except Exception as error:
             print(error)
     imap.close()
