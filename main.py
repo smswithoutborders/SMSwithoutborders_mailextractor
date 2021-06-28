@@ -37,6 +37,9 @@ def get_mails():
 
     msg_counter=0
     # max_counter = int(sys.argv[1])
+    '''
+    ['Return-Path', 'Delivered-To', 'Received', 'Received', 'Received', 'Received', 'Received', 'DKIM-Signature', 'X-Google-DKIM-Signature', 'X-Gm-Message-State', 'X-Google-Smtp-Source', 'MIME-Version', 'X-Received', 'Date', 'Reply-To', 'Message-ID', 'Subject', 'From', 'To', 'Cc', 'Content-Type', 'X-NCJF-Result', 'X-NCJF-Version', 'Authentication-Results']
+    '''
     for num in msgnums[0].split():
         mtyp, msg = imap.fetch(num, STANDARDS)
         data=msg[0][CONTENT_INDEX]
@@ -47,6 +50,8 @@ def get_mails():
         _from = msg['From']
         To = msg['To']
         Subject = msg['Subject']
+        reply_to = msg['Reply-To']
+        cc = msg['Cc']
         encoding=None
         encodings=[]
         content_transfer_encoding=None
@@ -67,7 +72,9 @@ def get_mails():
         '''
         print(f"ID: {msg['Message-ID']}")
         print(f"From: {msg['From']}")
+        print(f"Reply-To: {msg['Reply-To']}")
         print(f"To: {msg['To']}")
+        print(f"Cc: {msg['Cc']}")
         print(f"Subject: {msg['Subject']}") 
         print(f"Encoding: {encoding}")
         print(f"Encodings: {encodings}")
@@ -79,8 +86,8 @@ def get_mails():
             insert_status = datastore.new_message( \
                     _id = _id, \
                     _from = _from, \
-                    to = to, \
-                    subject = subject, \
+                    to = To, \
+                    subject = Subject, \
                     reply_to = reply_to, \
                     cc = cc, \
                     date = date, \
