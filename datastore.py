@@ -120,8 +120,8 @@ class Datastore(object):
             raise Exception( err )
 
 
-    def new_message(self, _id, _from, to, subject, reply_to, cc, date):
-        query = f"INSERT INTO emails SET id=%s, from=%s, to=%s, subject=%s, cc=%s, date=%s"
+    def new_message(self, _id, _from, to, subject, reply_to, cc, date, encoding, body):
+        query = f"INSERT INTO emails SET id=%s, from=%s, to=%s, subject=%s, cc=%s, date=%s, encoding=%s, body=%s"
         query_vars = [_id, _from, to, subject, cc, date]
         try:
             self.cursor.execute( query, query_vars )

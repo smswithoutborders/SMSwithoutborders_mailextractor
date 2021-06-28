@@ -13,7 +13,7 @@ import configparser
 import base64
 import email
 from email.parser import HeaderParser
-from datastore import Datastore
+# from datastore import Datastore
 
 CONFIGS = configparser.ConfigParser(interpolation=None)
 PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
@@ -40,33 +40,27 @@ for num in msgnums[0].split():
     mtyp, msg = imap.fetch(num, STANDARDS)
     data=msg[0][CONTENT_INDEX]
     msg = email.message_from_bytes(data)
-    print(msg.keys())
+    # print(msg.keys())
+    # datastore = Datastore()
+    _id = msg['Message-ID']
+    _from = msg['From']
+    To = msg['To']
+    Subject = msg['Subject']
+    encoding=None
+    Body=None
+
+    for part in msg.walk():
+        if part.get_content_type() == "text/plain":
+            encoding = part.get_charsets()[0]
+            # print(str(base64.b64decode(part.get_payload()), encoding))
+            # print(part.get_payload())
+            Body=part.get_payload()
 
     print(f"ID: {msg['Message-ID']}")
     print(f"From: {msg['From']}")
     print(f"To: {msg['To']}")
-    print(f"Subject: {msg['Subject']}", end="\n\n")
-    '''
-    # print(f"Content-Type {msg['Content-Type']}")
+    print(f"Subject: {msg['Subject']}") 
+    print(f"Encoding: {encoding}")
+    print(f"Body - snippet: {Body[:40]}", end="\n\n")
 
-    for part in msg.walk():
-        if part.get_content_type() == "text/plain":
-            # TODO: get encoding from part.get_charset()
-            # print(str(base64.b64decode(part.get_payload()), 'utf-8'))
-            print(part.get_payload())
-    '''
-
-    if msg_counter == max_counter:
-        break
-    msg_counter +=1
-    
-
-# for num in msgnums
-'''
-for num in data[0].split():
-    tmp, data = imap.fetch(num, '(RFC822)')
-    print('Message: {0}\n'.format(num))
-    pprint.pprint(data[0][1])
-    break
-'''
 imap.close()
