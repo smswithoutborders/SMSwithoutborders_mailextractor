@@ -73,4 +73,19 @@ for num in msgnums[0].split():
     print(f"Content-Transfer-Encoding: {content_transfer_encoding}")
     print(f"Body - snippet: {Body[:40]}", end="\n\n")
 
+    datastore = Datastore()
+    try:
+        insert_status = datastore.new_message( \
+                _id = _id, \
+                _from = _from, \
+                to = to, \
+                subject = subject, \
+                reply_to = reply_to, \
+                cc = cc, \
+                date = date, \
+                encoding = encoding, \
+                content_transfer_encoding = content_transfer_encoding, \
+                body = body)
+    except Exception as error:
+        print(error)
 imap.close()
