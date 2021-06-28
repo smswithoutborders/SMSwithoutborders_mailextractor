@@ -47,20 +47,30 @@ for num in msgnums[0].split():
     To = msg['To']
     Subject = msg['Subject']
     encoding=None
+    encodings=[]
+    content_transfer_encoding=None
     Body=None
 
     for part in msg.walk():
         if part.get_content_type() == "text/plain":
             encoding = part.get_charsets()[0]
+            encodings = part.get_charsets()
             # print(str(base64.b64decode(part.get_payload()), encoding))
             # print(part.get_payload())
+            content_transfer_encoding=part['Content-Transfer-Encoding']
             Body=part.get_payload()
 
+    '''
+    if msg['Message-ID'] == '<0000000000008af50105c51941cc@google.com>':
+        print(data)
+    '''
     print(f"ID: {msg['Message-ID']}")
     print(f"From: {msg['From']}")
     print(f"To: {msg['To']}")
     print(f"Subject: {msg['Subject']}") 
     print(f"Encoding: {encoding}")
+    print(f"Encodings: {encodings}")
+    print(f"Content-Transfer-Encoding: {content_transfer_encoding}")
     print(f"Body - snippet: {Body[:40]}", end="\n\n")
 
 imap.close()
