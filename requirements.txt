@@ -3,3 +3,4 @@ mysql-connector-python-rf==2.2.2
 protobuf==3.17.3
 PyMySQL==1.0.2
 six==1.16.0
+tqdm==4.61.1

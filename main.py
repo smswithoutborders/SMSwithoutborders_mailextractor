@@ -12,6 +12,7 @@ import os
 import configparser
 import base64
 import email
+import tqdm
 from email.parser import HeaderParser
 from datastore import Datastore
 
@@ -40,7 +41,7 @@ def get_mails():
     '''
     ['Return-Path', 'Delivered-To', 'Received', 'Received', 'Received', 'Received', 'Received', 'DKIM-Signature', 'X-Google-DKIM-Signature', 'X-Gm-Message-State', 'X-Google-Smtp-Source', 'MIME-Version', 'X-Received', 'Date', 'Reply-To', 'Message-ID', 'Subject', 'From', 'To', 'Cc', 'Content-Type', 'X-NCJF-Result', 'X-NCJF-Version', 'Authentication-Results']
     '''
-    for num in msgnums[0].split():
+    for num in tqdm(range(len(msgnums[0].split())), "extracting..."):
         mtyp, msg = imap.fetch(num, STANDARDS)
         data=msg[0][CONTENT_INDEX]
         msg = email.message_from_bytes(data)
