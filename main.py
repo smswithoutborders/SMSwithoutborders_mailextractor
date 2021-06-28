@@ -103,6 +103,9 @@ def get_mails():
                     body = Body)
         except Exception as error:
             print(error)
+        else:
+            # TODO: email should be saved for processing
+            pass
     imap.close()
 
 if __name__ == "__main__":
