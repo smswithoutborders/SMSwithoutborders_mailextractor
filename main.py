@@ -98,7 +98,6 @@ def get_mails():
         try:
             # store_messages( ID=ID, From=From, To=To, Subject=Subject, reply_to=reply_to, cc=cc, date=date, encoding=encoding, content_transfer_encoding=content_transfer_encoding, Body=Body)
             pass
-            pass
         except Exception as error:
             print(error)
         else:
@@ -106,15 +105,14 @@ def get_mails():
             message["from"] = From
             message["to"] = To
             message["subject"] = Subject
-            message["body"] = Body
+            message["body"] = reply_parser(bytes.decode(Body))
             message["reply_to"] = reply_to
             message["cc"] = cc
             message["content_transfer_encoding"] = content_transfer_encoding
             message["encoding"] = encoding
 
-            reply_parser(bytes.decode(Body))
-            
             messages.append(message)
+            break
     imap.close()
     return messages
 
@@ -152,16 +150,20 @@ def transmit_messages(messages):
     if content_transfer_encoding == 'base64':
         Body = base64.b64decode(Body)
     '''
-    try:
-        if check_ssl():
-            # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
-            request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+    iter_count=1
+    for message in messages:
+        print(f"> Transmitting {iter_count} of {len(messages)}")
+        try:
+            if check_ssl():
+                # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":message['body'][:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+            else:
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":message['body'][:1600]})
+        except Exception as error:
+            raise Exception(error)
         else:
-            request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]})
-    except Exception as error:
-        raise Exception(error)
-    else:
-        print(request.text)
+            print(request.text)
+        iter_count = iter_count +1
 
 def reply_parser(message):
     '''
@@ -194,17 +196,15 @@ def reply_parser(message):
         print(s_message)
     
     '''
-    print(s_message[0])
+    # print(s_message[0])
+    return s_message[0]
 
 if __name__ == "__main__":
     import start_routines
     start_routines.sr_database_checks()
     messages=get_mails()
-    # print(messages)
-    # reply_parser( messages[0] )
-    '''
+    print(messages)
     try:
-        transmit_messages(messages)
+        transmit_messages([messages[0]])
     except Exception as error:
         print(error)
-    '''
