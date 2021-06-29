@@ -105,7 +105,11 @@ def get_mails():
             print(error)
         else:
             # TODO: email should be saved for processing
-            pass
+            # TODO: forward email to messaging priority
+            # pass
+            '''
+            - send associated message to router
+            '''
     imap.close()
 
 if __name__ == "__main__":
