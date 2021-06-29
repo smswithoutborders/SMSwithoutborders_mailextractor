@@ -209,7 +209,7 @@ if __name__ == "__main__":
     messages=get_mails()
     print(messages)
     try:
-        # transmit_messages([messages[0]])
+        transmit_messages(messages)
         pass
     except Exception as error:
         print(error)
