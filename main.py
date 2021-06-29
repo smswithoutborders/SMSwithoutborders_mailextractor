@@ -6,6 +6,10 @@
 - https://docs.python.org/3/library/email.compat32-message.html#email.message.Message
 '''
 
+'''
+TODO: build out messages to have headers, that way identification of sender becomes known
+'''
+
 import imaplib
 import sys
 import os
@@ -205,7 +209,7 @@ def reply_parser(message):
 
 if __name__ == "__main__":
     import start_routines
-    start_routines.sr_database_checks()
+    # start_routines.sr_database_checks()
     messages=get_mails()
     print(messages)
     try:
