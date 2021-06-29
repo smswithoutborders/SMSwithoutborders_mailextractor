@@ -12,6 +12,7 @@ import os
 import configparser
 import base64
 import email
+import requests
 from tqdm import tqdm
 from email.parser import HeaderParser
 from datastore import Datastore
@@ -19,6 +20,13 @@ from datastore import Datastore
 CONFIGS = configparser.ConfigParser(interpolation=None)
 PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
 CONFIGS.read(PATH_CONFIG_FILE)
+
+def check_ssl():
+    return os.path.isfile( CONFIGS["SSL"]["KEY"] ) and os.path.isfile(CONFIGS["SSL"]["CRT"])
+
+'''
+- todo: remove copied message body - significantly reduces the sizes of some emails
+'''
 
 def get_mails():
     imap_host = CONFIGS['IMAP']['HOST']
@@ -110,6 +118,21 @@ def get_mails():
             '''
             - send associated message to router
             '''
+            
+            # TODO: check for character limits
+            request=None
+            if content_transfer_encoding == 'base64':
+                Body = base64.b64decode(Body)
+            if check_ssl():
+                # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+
+            else:
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]})
+
+            print(request.text)
+
+            break
     imap.close()
 
 if __name__ == "__main__":
