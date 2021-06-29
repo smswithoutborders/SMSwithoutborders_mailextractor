@@ -22,6 +22,16 @@ CONFIGS = configparser.ConfigParser(interpolation=None)
 PATH_CONFIG_FILE = os.path.join(os.path.dirname(__file__), '', 'config.ini')
 CONFIGS.read(PATH_CONFIG_FILE)
 
+
+imap_host = CONFIGS['IMAP']['HOST']
+imap_user = CONFIGS['IMAP']['USER']
+imap_pass = CONFIGS['IMAP']['PASSWORD']
+
+imap = imaplib.IMAP4_SSL(imap_host)
+imap.login(imap_user, imap_pass)
+
+imap.select('INBOX')
+
 def check_ssl():
     return os.path.isfile( CONFIGS["SSL"]["KEY"] ) and os.path.isfile(CONFIGS["SSL"]["CRT"])
 
@@ -29,18 +39,11 @@ def check_ssl():
 - todo: remove copied message body - significantly reduces the sizes of some emails
 '''
 
+def mark_as_seen(e_id):
+    imap.store(e_id, '+FLAGS', '\Seen')
+
 def get_mails():
-    imap_host = CONFIGS['IMAP']['HOST']
-    imap_user = CONFIGS['IMAP']['USER']
-    imap_pass = CONFIGS['IMAP']['PASSWORD']
-
-    imap = imaplib.IMAP4_SSL(imap_host)
-    imap.login(imap_user, imap_pass)
-
-    imap.select('Inbox')
-
-    typ, msgnums = imap.search(None, 'ALL')
-
+    typ, msgnums = imap.search(None, 'ALL', '(UNSEEN)')
     CONTENT_INDEX=1
     STANDARDS='(RFC822)'
     parser = HeaderParser()
@@ -112,6 +115,7 @@ def get_mails():
             message["encoding"] = encoding
 
             messages.append(message)
+            mark_as_seen(num)
             break
     imap.close()
     return messages
@@ -205,6 +209,7 @@ if __name__ == "__main__":
     messages=get_mails()
     print(messages)
     try:
-        transmit_messages([messages[0]])
+        # transmit_messages([messages[0]])
+        pass
     except Exception as error:
         print(error)
