@@ -13,6 +13,7 @@ import configparser
 import base64
 import email
 import requests
+import re
 from tqdm import tqdm
 from email.parser import HeaderParser
 from datastore import Datastore
@@ -50,6 +51,7 @@ def get_mails():
     ['Return-Path', 'Delivered-To', 'Received', 'Received', 'Received', 'Received', 'Received', 'DKIM-Signature', 'X-Google-DKIM-Signature', 'X-Gm-Message-State', 'X-Google-Smtp-Source', 'MIME-Version', 'X-Received', 'Date', 'Reply-To', 'Message-ID', 'Subject', 'From', 'To', 'Cc', 'Content-Type', 'X-NCJF-Result', 'X-NCJF-Version', 'Authentication-Results']
     '''
     msgs = msgnums[0].split()
+    messages = []
     for i in tqdm(range(len(msgs)), "extracting..."):
         num = msgs[i]
         mtyp, msg = imap.fetch(num, STANDARDS)
@@ -57,8 +59,8 @@ def get_mails():
         msg = email.message_from_bytes(data)
         # print(msg.keys())
         # datastore = Datastore()
-        _id = msg['Message-ID']
-        _from = msg['From']
+        ID = msg['Message-ID']
+        From = msg['From']
         To = msg['To']
         Subject = msg['Subject']
         reply_to = msg['Reply-To']
@@ -76,12 +78,8 @@ def get_mails():
                 # print(str(base64.b64decode(part.get_payload()), encoding))
                 # print(part.get_payload())
                 content_transfer_encoding=part['Content-Transfer-Encoding']
-                Body=part.get_payload()
+                Body=part.get_payload(decode=True)
 
-        '''
-        if msg['Message-ID'] == '<0000000000008af50105c51941cc@google.com>':
-            print(data)
-        '''
         '''
         print(f"ID: {msg['Message-ID']}")
         print(f"From: {msg['From']}")
@@ -98,45 +96,115 @@ def get_mails():
 
         datastore = Datastore()
         try:
-            insert_status = datastore.new_message( \
-                    _id = _id, \
-                    _from = _from, \
-                    to = To, \
-                    subject = Subject, \
-                    reply_to = reply_to, \
-                    cc = cc, \
-                    date = date, \
-                    encoding = encoding, \
-                    content_transfer_encoding = content_transfer_encoding, \
-                    body = Body)
+            # store_messages( ID=ID, From=From, To=To, Subject=Subject, reply_to=reply_to, cc=cc, date=date, encoding=encoding, content_transfer_encoding=content_transfer_encoding, Body=Body)
+            pass
+            pass
         except Exception as error:
             print(error)
         else:
-            # TODO: email should be saved for processing
-            # TODO: forward email to messaging priority
-            # pass
-            '''
-            - send associated message to router
-            '''
+            message = {}
+            message["from"] = From
+            message["to"] = To
+            message["subject"] = Subject
+            message["body"] = Body
+            message["reply_to"] = reply_to
+            message["cc"] = cc
+            message["content_transfer_encoding"] = content_transfer_encoding
+            message["encoding"] = encoding
+
+            reply_parser(bytes.decode(Body))
             
-            # TODO: check for character limits
-            request=None
-            if content_transfer_encoding == 'base64':
-                Body = base64.b64decode(Body)
-            if check_ssl():
-                # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
-
-            else:
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]})
-
-            print(request.text)
-
-            break
+            messages.append(message)
     imap.close()
+    return messages
+
+def store_messages( ID, From, To, Subject, reply_to, date, encoding, Body, cc=None, content_transfer_encoding=None):
+    datastore = Datastore()
+    try:
+        insert_status = datastore.new_message( \
+                _id = ID, \
+                _from = From, \
+                to = To, \
+                subject = Subject, \
+                reply_to = reply_to, \
+                cc = cc, \
+                date = date, \
+                encoding = encoding, \
+                content_transfer_encoding = content_transfer_encoding, \
+                body = Body)
+    except Exception as error:
+        print(error)
+    else:
+        return True
+    return False
+
+def transmit_messages(messages):
+    # TODO: email should be saved for processing
+    # TODO: forward email to messaging priority
+    # pass
+    '''
+    - send associated message to router
+    '''
+    
+    # TODO: check for character limits
+    request=None
+    '''
+    if content_transfer_encoding == 'base64':
+        Body = base64.b64decode(Body)
+    '''
+    try:
+        if check_ssl():
+            # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+            request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+        else:
+            request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body[:1600]})
+    except Exception as error:
+        raise Exception(error)
+    else:
+        print(request.text)
+
+def reply_parser(message):
+    '''
+    # H1: This does't matter.... this defines the contents in the message
+    but whether forwarded or not is included in the plain/text body
+    if (H1) -> Custom parser must be built
+
+    ----------------
+    Content-Type: multipart/alternative; boundary="0000000000008912d505c593f421"
+
+    --0000000000008912d505c593f421
+    Content-Type: text/plain; charset="UTF-8"
+    Content-Transfer-Encoding: quoted-printableo
+    <reply to a multimedia image>
+    ----------------
+
+
+    ---------------------
+    Content-Type: text/plain; charset="UTF-8"
+    <single message not a reply>
+    --------------------
+
+    '''
+
+    # get all sentences starting with '>'
+    # TODO: keep checking for same pattern till the end to make sure it's truly the forwarded part
+    s_message = re.split(r'\n> ', message)
+    '''
+    if len(s_message) > 1:
+        print(s_message)
+    
+    '''
+    print(s_message[0])
 
 if __name__ == "__main__":
     import start_routines
     start_routines.sr_database_checks()
-    get_mails()
-
+    messages=get_mails()
+    # print(messages)
+    # reply_parser( messages[0] )
+    '''
+    try:
+        transmit_messages(messages)
+    except Exception as error:
+        print(error)
+    '''
