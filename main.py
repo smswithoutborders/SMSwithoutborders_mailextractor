@@ -116,7 +116,6 @@ def get_mails():
 
             messages.append(message)
             mark_as_seen(num)
-            break
     imap.close()
     return messages
 
