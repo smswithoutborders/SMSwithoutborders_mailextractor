@@ -6,10 +6,6 @@
 - https://docs.python.org/3/library/email.compat32-message.html#email.message.Message
 '''
 
-'''
-TODO: build out messages to have headers, that way identification of sender becomes known
-'''
-
 import imaplib
 import sys
 import os
@@ -161,12 +157,13 @@ def transmit_messages(messages):
     iter_count=1
     for message in messages:
         print(f"> Transmitting {iter_count} of {len(messages)}")
+        text=f"You've got mail!\nFrom: {message['from']}\nSubject: {message['subject']}\n\n{message['body'][:1600]}"
         try:
             if check_ssl():
                 # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":message['body'][:1600]}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
             else:
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":message['body'][:1600]})
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":text})
         except Exception as error:
             raise Exception(error)
         else:
