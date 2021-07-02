@@ -64,7 +64,7 @@ def get_mails():
         # datastore = Datastore()
         ID = msg['Message-ID']
         From = msg['From']
-        To = msg['To']
+        To = msg['To'].split(', ')
         Subject = msg['Subject']
         reply_to = msg['Reply-To']
         cc = msg['Cc']
@@ -104,19 +104,20 @@ def get_mails():
         except Exception as error:
             print(error)
         else:
-            message = {}
-            message["from"] = From
-            message["to"] = To
-            message["subject"] = Subject
-            message["body"] = reply_parser(bytes.decode(Body))
-            message["reply_to"] = reply_to
-            message["cc"] = cc
-            message["content_transfer_encoding"] = content_transfer_encoding
-            message["encoding"] = encoding
-            message["e_id"] = num
+            for _to in To:
+                message = {}
+                message["from"] = From
+                message["to"] = _to
+                message["subject"] = Subject
+                message["body"] = reply_parser(bytes.decode(Body))
+                message["reply_to"] = reply_to
+                message["cc"] = cc
+                message["content_transfer_encoding"] = content_transfer_encoding
+                message["encoding"] = encoding
+                message["e_id"] = num
 
-            messages.append(message)
-            # mark_as_seen(num)
+                messages.append(message)
+                # mark_as_seen(num)
     return messages
 
 def store_messages( ID, From, To, Subject, reply_to, date, encoding, Body, cc=None, content_transfer_encoding=None):
@@ -138,6 +139,11 @@ def store_messages( ID, From, To, Subject, reply_to, date, encoding, Body, cc=No
     else:
         return True
     return False
+
+
+def parse_email(email):
+    # name <email>
+    return email.split(' ')[-1:][0].replace('<', '').replace('>', '')
 
 def transmit_messages(messages):
     # pass
@@ -165,12 +171,17 @@ def transmit_messages(messages):
                 number = response['country_code'] + response['phone_number']
                 request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":number, "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
             else:
-                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']}/hash", json={"email":message['to']})
+                print(message)
+                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']}/hash", json={"email":parse_email(message['to'])})
+                if not response.ok:
+                    print(response.text)
+                    continue
+                    # raise Exception("no number acquired from router!")
                 response = response.json()
-                print(response)
                 if len(response) < 1:
                     continue
                 response = response[0]
+
                 if not 'phone_number' in response:
                     raise Exception("no number acquired from router!")
                 number = response['country_code'] + response['phone_number']
