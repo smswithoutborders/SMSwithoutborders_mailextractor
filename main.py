@@ -113,10 +113,10 @@ def get_mails():
             message["cc"] = cc
             message["content_transfer_encoding"] = content_transfer_encoding
             message["encoding"] = encoding
+            message["e_id"] = num
 
             messages.append(message)
-            mark_as_seen(num)
-    imap.close()
+            # mark_as_seen(num)
     return messages
 
 def store_messages( ID, From, To, Subject, reply_to, date, encoding, Body, cc=None, content_transfer_encoding=None):
@@ -140,8 +140,6 @@ def store_messages( ID, From, To, Subject, reply_to, date, encoding, Body, cc=No
     return False
 
 def transmit_messages(messages):
-    # TODO: email should be saved for processing
-    # TODO: forward email to messaging priority
     # pass
     '''
     - send associated message to router
@@ -156,25 +154,35 @@ def transmit_messages(messages):
     iter_count=1
     for message in messages:
         print(f"> Transmitting {iter_count} of {len(messages)}")
-        text=f"You've got mail!\nFrom: {message['from']}\nSubject: {message['subject']}\n\n{message['body'][:1600]}"
+        text=f"To: {message['to']}\nFrom: {message['from']}\nSubject: {message['subject']}\n\n{message['body']}"
+        text=text[:1600]
         try:
             if check_ssl():
-                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']/hash", json={"email":email}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']}/hash", json={"email":message['to']}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
                 response = response.json()
-                if not 'number' in response:
+                if not 'phone_number' in response[0]:
                     raise Exception("no number acquired from router!")
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":response['number'], "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                number = response['country_code'] + response['phone_number']
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":number, "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
             else:
-                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']/hash", json={"email":email})
+                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']}/hash", json={"email":message['to']})
                 response = response.json()
-                if not 'number' in response:
+                print(response)
+                if len(response) < 1:
+                    continue
+                response = response[0]
+                if not 'phone_number' in response:
                     raise Exception("no number acquired from router!")
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":response['number'], "text":text})
+                number = response['country_code'] + response['phone_number']
+                print(number)
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":number, "text":text})
         except Exception as error:
+            # print(error)
             raise Exception(error)
         else:
             print(request.text)
         iter_count = iter_count +1
+    imap.close()
 
 def reply_parser(message):
     '''
@@ -217,6 +225,5 @@ if __name__ == "__main__":
     print(messages)
     try:
         transmit_messages(messages)
-        pass
     except Exception as error:
         print(error)
