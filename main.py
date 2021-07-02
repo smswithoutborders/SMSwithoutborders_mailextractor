@@ -159,10 +159,17 @@ def transmit_messages(messages):
         text=f"You've got mail!\nFrom: {message['from']}\nSubject: {message['subject']}\n\n{message['body'][:1600]}"
         try:
             if check_ssl():
-                # request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":Body}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']/hash", json={"email":email}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
+                response = response.json()
+                if not 'number' in response:
+                    raise Exception("no number acquired from router!")
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":response['number'], "text":text}, cert=(CONFIGS["SSL"]["CRT"], CONFIGS["SSL"]["KEY"]))
             else:
-                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":sys.argv[1], "text":text})
+                response = requests.post(f"{CONFIGS['CLOUD_API']['DEV_URL']/hash", json={"email":email})
+                response = response.json()
+                if not 'number' in response:
+                    raise Exception("no number acquired from router!")
+                request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":response['number'], "text":text})
         except Exception as error:
             raise Exception(error)
         else:
