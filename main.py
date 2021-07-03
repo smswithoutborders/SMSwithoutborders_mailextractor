@@ -14,6 +14,7 @@ import base64
 import email
 import requests
 import re
+import time
 from tqdm import tqdm
 from email.parser import HeaderParser
 from datastore import Datastore
@@ -193,7 +194,6 @@ def transmit_messages(messages):
         else:
             print(request.text)
         iter_count = iter_count +1
-    imap.close()
 
 def reply_parser(message):
     '''
@@ -232,9 +232,14 @@ def reply_parser(message):
 if __name__ == "__main__":
     import start_routines
     # start_routines.sr_database_checks()
-    messages=get_mails()
-    print(messages)
-    try:
-        transmit_messages(messages)
-    except Exception as error:
-        print(error)
+    while True:
+        print("scanning for messages...")
+        messages=get_mails()
+        # print(messages)
+        try:
+            transmit_messages(messages)
+        except Exception as error:
+            print(error)
+
+        time.sleep(10)
+    imap.close()
