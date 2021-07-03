@@ -30,6 +30,7 @@ imap_pass = CONFIGS['IMAP']['PASSWORD']
 
 imap = imaplib.IMAP4_SSL(imap_host)
 imap.login(imap_user, imap_pass)
+print("login successful")
 
 imap.select('INBOX')
 
@@ -56,8 +57,11 @@ def get_mails():
     '''
     msgs = msgnums[0].split()
     messages = []
+    '''
     for i in tqdm(range(len(msgs)), "extracting..."):
         num = msgs[i]
+    '''
+    for num in msgs:
         mtyp, msg = imap.fetch(num, STANDARDS)
         data=msg[0][CONTENT_INDEX]
         msg = email.message_from_bytes(data)
@@ -186,7 +190,7 @@ def transmit_messages(messages):
                 if not 'phone_number' in response:
                     raise Exception("no number acquired from router!")
                 number = response['country_code'] + response['phone_number']
-                print(number)
+                # print(number)
                 request = requests.post(CONFIGS['TWILIO']['SEND_URL'], json={"number":number, "text":text})
         except Exception as error:
             # print(error)
@@ -232,8 +236,9 @@ def reply_parser(message):
 if __name__ == "__main__":
     import start_routines
     # start_routines.sr_database_checks()
+    print("daemon began")
     while True:
-        print("scanning for messages...")
+        # print("scanning for messages...")
         messages=get_mails()
         # print(messages)
         try:
@@ -241,5 +246,5 @@ if __name__ == "__main__":
         except Exception as error:
             print(error)
 
-        time.sleep(10)
+        time.sleep(int(CONFIGS['LOOPS']['SLEEP']))
     imap.close()
